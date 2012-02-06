@@ -90,6 +90,6 @@ sub getHarvest(\%){
 
 my %towns = (
     '12699' => [5215, 5213, 5216, 5210],
-);
+);# town ID and ID villages (where <= from)
 
 getHarvest(%towns);
