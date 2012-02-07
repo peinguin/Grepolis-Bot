@@ -1,16 +1,1 @@
-=======================================Datetime 58 32 16 2 1 112 4 32 0Harvest from 5215 to 12699 Retcode 200 Output 
-358
-{"error":"Селение не может сейчас выполнить ваше требование.","t_token":12699,"incoming_attack_count":0,"notifications":[],"next_fetch_in":300}8|10
-_srvtime1328193177======================================= =======================================Datetime 58 32 16 2 1 112 4 32 0Harvest from 5213 to 12699 Retcode 200 Output 
-358
-{"error":"Селение не может сейчас выполнить ваше требование.","t_token":12699,"incoming_attack_count":0,"notifications":[],"next_fetch_in":300}8|10
-_srvtime1328193177473
-{"relation_status":1,"lootable_human":"сегодня, в 18:37","satisfaction":"100","success":"Сырье успешно доставлено","bar":{"resources":{"wood":1110,"stone":284,"iron":232},"storage":1185,"resources_contraints":{"plenty":"iron","rare":"wood"}},"t_token":12699,"incoming_attack_count":0,"notifications":[],"next_fetch_in":300}8|10
-_srvtime1328193177======================================= =======================================Datetime 58 32 16 2 1 112 4 32 0Harvest from 5216 to 12699 Retcode 200 Output 
-358
-{"error":"Селение не может сейчас выполнить ваше требование.","t_token":12699,"incoming_attack_count":0,"notifications":[],"next_fetch_in":300}8|10
-_srvtime1328193177473
-{"relation_status":1,"lootable_human":"сегодня, в 18:37","satisfaction":"100","success":"Сырье успешно доставлено","bar":{"resources":{"wood":1110,"stone":284,"iron":232},"storage":1185,"resources_contraints":{"plenty":"iron","rare":"wood"}},"t_token":12699,"incoming_attack_count":0,"notifications":[],"next_fetch_in":300}8|10
-_srvtime1328193177473
-{"relation_status":1,"lootable_human":"сегодня, в 18:37","satisfaction":"100","success":"Сырье успешно доставлено","bar":{"resources":{"wood":1130,"stone":304,"iron":252},"storage":1185,"resources_contraints":{"plenty":"iron","rare":"wood"}},"t_token":12699,"incoming_attack_count":0,"notifications":[],"next_fetch_in":300}8|10
-_srvtime1328193178======================================= 
+

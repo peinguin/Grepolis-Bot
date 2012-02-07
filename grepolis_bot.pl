@@ -4,9 +4,23 @@ use strict;
 use warnings;
 use WWW::Curl::Easy;
 use URI::Escape;
+use Config::IniFiles;
+use Data::Dumper;
 
-my $h = '436512ea04d';# - find in Request
-my $sid = 'dulkd8obvtsgosco8wg0ogc4c';# - find in headers(Cookies)
+my %ini;
+tie %ini, 'Config::IniFiles', ( -file => "config.ini" );
+
+my $sid = $ini{security}{sid};#$cfg->val( 'security', 'sid' );
+my $h = $ini{security}{h};#$cfg->val( 'security', 'h' );
+my @numbers = (1, 2, 3, 4, 5);
+
+my %towns = ();
+
+foreach my $town ($ini{towns}){
+    my($key, $value) = %$town;
+    my @villagies = split(', ',$value);
+    $towns{$key} = \@villagies;
+}
 
 my @cookies = (
     '__utma=1.186868278.1328023865.1328092768.1328172347.3',
@@ -86,10 +100,5 @@ sub getHarvest(\%){
         }
     }
 }
-
-
-my %towns = (
-    '12699' => [5215, 5213, 5216, 5210],
-);# town ID and ID villages (where <= from)
 
 getHarvest(%towns);
