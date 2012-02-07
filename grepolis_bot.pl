@@ -5,7 +5,7 @@ use warnings;
 use WWW::Curl::Easy;
 use URI::Escape;
 use Config::IniFiles;
-use Data::Dumper;
+
 
 my %ini;
 tie %ini, 'Config::IniFiles', ( -file => "config.ini" );
@@ -18,8 +18,7 @@ my %towns = ();
 
 foreach my $town ($ini{towns}){
     my($key, $value) = %$town;
-    my @villagies = split(', ',$value);
-    $towns{$key} = \@villagies;
+    $towns{$key} = [ split(', ',$value) ];
 }
 
 my @cookies = (
