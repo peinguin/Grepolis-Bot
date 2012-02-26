@@ -5,22 +5,19 @@ use warnings;
 use WWW::Curl::Easy;
 use URI::Escape;
 use Config::IniFiles;
+use Data::Dumper;
 
+my $cfg = Config::IniFiles->new( -file => "config.ini" );
 
-my %ini;
-tie %ini, 'Config::IniFiles', ( -file => "config.ini" );
-
-my $sid = $ini{security}{sid};#$cfg->val( 'security', 'sid' );
-my $h = $ini{security}{h};#$cfg->val( 'security', 'h' );
-my @numbers = (1, 2, 3, 4, 5);
+my $sid = $cfg->val( 'security', 'sid' );
+my $h = $cfg->val( 'security', 'h' );
 
 my %towns = ();
 
-foreach my $town ($ini{towns}){
-    my($key, $value) = %$town;
-    $towns{$key} = [ split(', ',$value) ];
+foreach my $town ($cfg->Parameters('towns')){
+    my @villagies = split(', ',$cfg->val( 'towns', $town ));
+    $towns{$town} = \@villagies;
 }
-
 my @cookies = (
     '__utma=1.186868278.1328023865.1328092768.1328172347.3',
     '__utmz=1.1328092768.2.2.utmcsr=ru.grepolis.com|utmccn=(referral)|utmcmd=referral|utmcct=/start',

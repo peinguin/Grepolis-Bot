@@ -1,3 +1,3 @@
 #!/bin/sh
-cd /home/projects/grepolis_bot
-./grepolis_bot.pl |  ascii2uni -a L >> log
+cd /home/scripts/grepolis_bot
+./grepolis_bot.pl | /usr/local/bin/ascii2uni -a L >> log 2>/dev/null
