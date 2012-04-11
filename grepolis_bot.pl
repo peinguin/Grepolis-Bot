@@ -103,9 +103,9 @@ sub getHarvest(\%){
     }
     
     if($harvest_chiken){
-            
-        my @towns = keys $_[0];
-            
+        
+        my @towns = keys %{$_[0]};
+        
         $town_id = @towns[int(rand($#towns))];
             
         $curl->setopt(CURLOPT_POST, 0);
