@@ -6,6 +6,9 @@ use WWW::Curl::Easy;
 use URI::Escape;
 use Config::IniFiles;
 use Data::Dumper;
+use Unicode::Escape qw(escape unescape);
+use URI::Encode qw(uri_encode uri_decode);
+use JSON;
 
 my $cfg = Config::IniFiles->new( -file => "config.ini" );
 
@@ -45,27 +48,21 @@ push(@headers, 'Referer: http://ru8.grepolis.com/game/index?login=1');
 push(@headers, 'User-Agent:	Mozilla/5.0 (X11; Linux x86_64; rv:9.0.1) Gecko/20100101 Firefox/9.0.1 Iceweasel/9.0.1');
 push(@headers, 'X-Requested-With: XMLHttpRequest');
 
-#print join("\n", @headers);die;
+my $curl = WWW::Curl::Easy->new;
+$curl->setopt(CURLOPT_HEADER,0);
+$curl->setopt(CURLOPT_HTTPHEADER, \@headers);
 
-sub getHarvest(\%){
-    my $curl = WWW::Curl::Easy->new;
+my $harvest_chiken = $cfg->val( 'chiken', 'harvest_chiken' );
     
+sub getHarvest(\%){
+    
+    my $url = '';
     my $page = 'farm_town_info';
     my $action = 'claim_load';
     my $town_id = '';
-    my $url = '';
     my $json = '';
     my $target_id = '';
     my $retcode = 0;
-
-    $curl->setopt(CURLOPT_HEADER,0);
-    $curl->setopt(CURLOPT_HTTPHEADER, \@headers);
-    $curl->setopt(CURLOPT_POST, 1);
-    
-    my $response_body;
-    open(my $fileb, ">", \$response_body);
-    $curl->setopt(CURLOPT_WRITEDATA,$fileb);
-
     
     my($key, $value);
     while ( ($key, $value) = each(%{$_[0]}) ) {
@@ -74,25 +71,100 @@ sub getHarvest(\%){
         foreach $v (@{$value}){
             $target_id = $v;
             
+            $curl->setopt(CURLOPT_POST, 1);
             $url = 'http://ru8.grepolis.com/game/'.$page.'?action='.$action.'&town_id='.$town_id.'&h='.$h;
             $curl->setopt(CURLOPT_URL, $url);
             $json = '{"target_id":"'.$target_id.'","claim_type":"normal","time":300,"town_id":"'.$town_id.'","nlreq_id":917182}';    
             $curl->setopt(CURLOPT_POSTFIELDS, 'json='.$json);
             
+            my $response_body = '';
+            open(my $fileb, ">", \$response_body);
+            $curl->setopt(CURLOPT_WRITEDATA,$fileb);
+            
             $retcode = $curl->perform;
             
-            print "=======================================\n";
-            print "Datetime ".join(' ', localtime(time))."\n";
-            print "Harvest from $target_id to $town_id \n";
+            my $response_code = $curl->getinfo(CURLINFO_HTTP_CODE);
+            print "Farm get harvesr retcode $response_code; TownId $town_id farmId $target_id \n";
             
-            if ($retcode == 0) {
-                my $response_code = $curl->getinfo(CURLINFO_HTTP_CODE);
-                print "Retcode $response_code \n";
-                print "Output \n".$response_body."\n";
-            } else {
-                print "An error happened: $retcode ".$curl->strerror($retcode)." ".$curl->errbuf."\n";
+            #print "=======================================\n";
+            #print "Datetime ".join(' ', localtime(time))."\n";
+            #print "Harvest from $target_id to $town_id \n";
+            
+            #if ($retcode == 0) {
+            #    my $response_code = $curl->getinfo(CURLINFO_HTTP_CODE);
+            #    print "Retcode $response_code \n";
+            #    print "Output \n".unescape($response_body)."\n";
+            #} else {
+            #    print "An error happened: $retcode ".$curl->strerror($retcode)." ".$curl->errbuf."\n";
+            #}
+            #print "\n=======================================\n";
+            
+        }
+    }
+    
+    if($harvest_chiken){
+            
+        my @towns = keys $_[0];
+            
+        $town_id = @towns[int(rand($#towns))];
+            
+        $curl->setopt(CURLOPT_POST, 0);
+        
+        $page = 'easter';
+        $action = 'index';
+        $json = '{"town_id":"'.$town_id.'","nlreq_id":917182}';
+        $url = 'http://ru8.grepolis.com/game/'.$page.'?action='.$action.'&town_id='.$town_id.'&h='.$h.'&json='.uri_encode($json);
+        $curl->setopt(CURLOPT_URL, $url);
+        
+        my $response_body = '';
+        open(my $fileb, ">", \$response_body);
+        $curl->setopt(CURLOPT_WRITEDATA,$fileb);
+        $retcode = $curl->perform;
+        
+        if ($retcode == 0) {
+            my $response_code = $curl->getinfo(CURLINFO_HTTP_CODE);
+            print "Chicken index retcode $response_code; TownId $town_id \n";
+            #print "Output \n".unescape($response_body)."\n";
+
+            $response_body =~ m/({.*})/;
+            $json = JSON->new->allow_nonref;
+            my $resp = $json->decode( unescape($1) );
+            
+            if(defined $resp->{'data'}->{'food_search_ends_at'}){
+                if( defined$resp->{'data'}->{'food_found'}){
+                    my $grass = $resp->{'data'}->{'food_found'}->{'grass'};
+                    my $worms = $resp->{'data'}->{'food_found'}->{'grass'};
+                    my $corn = $resp->{'data'}->{'food_found'}->{'grass'};
+                    
+                    $action = 'collect';
+                    $json = '{"town_id":"'.$town_id.'","nlreq_id":917182}';
+                    $url = 'http://ru8.grepolis.com/game/'.$page.'?action='.$action.'&town_id='.$town_id.'&h='.$h.'&json='.uri_encode($json);
+                    $curl->setopt(CURLOPT_URL, $url);
+                    my $response_body = '';
+                    open(my $fileb, ">", \$response_body);
+                    $curl->setopt(CURLOPT_WRITEDATA,$fileb);
+                    $retcode = $curl->perform;
+                    
+                    print "Chicken collect retcode $response_code; TownId $town_id \n";
+                    if($grass == 0 && $worms == 0 && $corn == 0){
+                        print "Nothing found \n";
+                    }
+                }
             }
-            print "\n=======================================\n";
+            
+            $action = 'start_search';
+            $json = '{"duration":300, "town_id":"'.$town_id.'","nlreq_id":917182}';
+            $url = 'http://ru8.grepolis.com/game/'.$page.'?action='.$action.'&town_id='.$town_id.'&h='.$h.'&json='.uri_encode($json);
+            $curl->setopt(CURLOPT_URL, $url);
+            my $response_body = '';
+            open(my $fileb, ">", \$response_body);
+            $curl->setopt(CURLOPT_WRITEDATA,$fileb);
+            $retcode = $curl->perform;
+            
+            print "Chicken search retcode $response_code; TownId $town_id \n";
+            
+        } else {
+            print "An error happened: $retcode ".$curl->strerror($retcode)." ".$curl->errbuf."\n";
         }
     }
 }
