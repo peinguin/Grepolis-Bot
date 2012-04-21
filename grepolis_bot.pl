@@ -126,12 +126,16 @@ sub Process(\%){
                 $to_build = 'barracks';
             }elsif(defined $hash{'Harbor'}){
                 $to_build = 'docks';
+            }elsif(defined $hash{'Silver mine'}){
+                $to_build = 'ironer';
             }
             
             if($to_build ne ''){
                 $action = 'build';
-                $json = '{"building":"main","level":5,"wnd_main":{"typeinforefid":0,"type":10},"wnd_index":1,"town_id":"'.$town_id.'","nlreq_id":224625}';
+                $json = '{"building":"'.$to_build.'","level":5,"wnd_main":{"typeinforefid":0,"type":10},"wnd_index":1,"town_id":"'.$town_id.'","nlreq_id":224625}';
                 my $response_body = perform_request($page, $action, $town_id, $json, 1);
+                
+                print $response_body."\n";
                 
                 print "Build ".$to_build." ; TownId $town_id\n";
             }
@@ -171,13 +175,11 @@ sub Process(\%){
                 $json = '{"id":"'.$target_id.'","town_id":"'.$town_id.'","nlreq_id":0}';
                 my $response_body = perform_request($page, $action, $town_id, $json, 0);
                 my ($now, $next) = ($response_body =~ /<div\sclass=\\\"farm_build_bar_amount\\\">(\d+)\\\/(\d+)<\\\/div>/g);
-    
+            
                 if($now < 150000){
                     $action = 'send_resources';
                     $json = '{"target_id":'.$target_id.',"wood":'.$wood_donate.',"stone":'.$stone_donate.',"iron":'.$iron_donate.',"town_id":"'.$town_id.'","nlreq_id":251650}';
                     my $response_body = perform_request($page, $action, $town_id, $json, 1);
-                    
-                    print "Farm donated harvest. TownId $town_id farmId $target_id \n";
                 }
             }
             
