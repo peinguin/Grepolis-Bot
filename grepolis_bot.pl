@@ -14,6 +14,7 @@ my $cfg = Config::IniFiles->new( -file => "config.ini" );
 
 my $sid = $cfg->val( 'security', 'sid' );
 my $h = $cfg->val( 'security', 'h' );
+my $server = $cfg->val( 'security', 'server' );
 
 my %towns = ();
 
@@ -52,9 +53,11 @@ my $curl = WWW::Curl::Easy->new;
 $curl->setopt(CURLOPT_HEADER,0);
 $curl->setopt(CURLOPT_HTTPHEADER, \@headers);
 
-my $harvest_chiken = $cfg->val( 'chiken', 'harvest_chiken' );
-    
-sub getHarvest(\%){
+my $harvest_chiken = $cfg->val( 'options', 'harvest_chiken' );
+my $build = $cfg->val( 'options', 'build' );
+my $harvest_farms = $cfg->val( 'options', 'harvest_farms' );
+
+sub Process(\%){
     
     my $url = '';
     my $page = 'farm_town_info';
@@ -68,37 +71,100 @@ sub getHarvest(\%){
     while ( ($key, $value) = each(%{$_[0]}) ) {
         $town_id = $key;
         my ($k, $v);
-        foreach $v (@{$value}){
-            $target_id = $v;
+        if($harvest_farms){
+            foreach $v (@{$value}){
+                $target_id = $v;
+                
+                $curl->setopt(CURLOPT_POST, 1);
+                $url = 'http://'.$server.'.grepolis.com/game/'.$page.'?action='.$action.'&town_id='.$town_id.'&h='.$h;
+                $curl->setopt(CURLOPT_URL, $url);
+                $json = '{"target_id":"'.$target_id.'","claim_type":"normal","time":300,"town_id":"'.$town_id.'","nlreq_id":917182}';    
+                $curl->setopt(CURLOPT_POSTFIELDS, 'json='.$json);
+                
+                my $response_body = '';
+                open(my $fileb, ">", \$response_body);
+                $curl->setopt(CURLOPT_WRITEDATA,$fileb);
+                
+                $retcode = $curl->perform;
+                
+                my $response_code = $curl->getinfo(CURLINFO_HTTP_CODE);
+                print "Farm get harvesr retcode $response_code; TownId $town_id farmId $target_id \n";
+                
+                #print "=======================================\n";
+                #print "Datetime ".join(' ', localtime(time))."\n";
+                #print "Harvest from $target_id to $town_id \n";
+                
+                #if ($retcode == 0) {
+                #    my $response_code = $curl->getinfo(CURLINFO_HTTP_CODE);
+                #    print "Retcode $response_code \n";
+                #    print "Output \n".unescape($response_body)."\n";
+                #} else {
+                #    print "An error happened: $retcode ".$curl->strerror($retcode)." ".$curl->errbuf."\n";
+                #}
+                #print "\n=======================================\n";
+            }
+        }
+        
+        if($build){
             
-            $curl->setopt(CURLOPT_POST, 1);
-            $url = 'http://ru8.grepolis.com/game/'.$page.'?action='.$action.'&town_id='.$town_id.'&h='.$h;
+            $page = 'building_main';
+            $action = 'index';
+            
+            $curl->setopt(CURLOPT_POST, 0);
+            $json = '{"town_id":"'.$town_id.'","nlreq_id":917182}';    
+            $url = 'http://'.$server.'.grepolis.com/game/'.$page.'?action='.$action.'&town_id='.$town_id.'&h='.$h.'&json='.$json;
             $curl->setopt(CURLOPT_URL, $url);
-            $json = '{"target_id":"'.$target_id.'","claim_type":"normal","time":300,"town_id":"'.$town_id.'","nlreq_id":917182}';    
-            $curl->setopt(CURLOPT_POSTFIELDS, 'json='.$json);
             
             my $response_body = '';
             open(my $fileb, ">", \$response_body);
             $curl->setopt(CURLOPT_WRITEDATA,$fileb);
-            
             $retcode = $curl->perform;
             
-            my $response_code = $curl->getinfo(CURLINFO_HTTP_CODE);
-            print "Farm get harvesr retcode $response_code; TownId $town_id farmId $target_id \n";
-            
-            #print "=======================================\n";
-            #print "Datetime ".join(' ', localtime(time))."\n";
-            #print "Harvest from $target_id to $town_id \n";
-            
-            #if ($retcode == 0) {
-            #    my $response_code = $curl->getinfo(CURLINFO_HTTP_CODE);
-            #    print "Retcode $response_code \n";
-            #    print "Output \n".unescape($response_body)."\n";
-            #} else {
-            #    print "An error happened: $retcode ".$curl->strerror($retcode)." ".$curl->errbuf."\n";
-            #}
-            #print "\n=======================================\n";
-            
+            if ($retcode == 0) {
+                my $response_code = $curl->getinfo(CURLINFO_HTTP_CODE);
+                $response_body =~ m/({.*})/;
+                my %hash = ( JSON->new->allow_nonref->decode( unescape($1) )->{'html'} =~ /<div\sclass="name\ssmall\sbold"><a\sonclick="Layout.buildingWindow.open\('[\w\s]+'\);"\shref="#">([\w\s]+)<\/a><\/div>[\t\s\n\r]+<a\shref="#"\sonclick="BuildingMain.buildBuilding\('\w+',\s(\d+)\);/g );
+                
+                my $to_build = '';
+                
+                if(defined $hash{'Senate'} && $hash{'Senate'}<25){
+                    $to_build = 'main';
+                }elsif(defined $hash{'Farm'}){
+                    $to_build = 'farm';
+                }elsif(defined $hash{'Warehouse'}){
+                    $to_build = 'storage';
+                }elsif(defined $hash{'Academy'}){
+                    $to_build = 'academy';
+                }elsif(defined $hash{'Barracks'}){
+                    $to_build = 'barracks';
+                }elsif(defined $hash{'Harbor'}){
+                    $to_build = 'docks';
+                }
+                
+                if($to_build ne ''){
+                    
+                    $action = 'build';
+                    
+                    $curl->setopt(CURLOPT_POST, 1);
+                    $url = 'http://'.$server.'.grepolis.com/game/'.$page.'?action='.$action.'&town_id='.$town_id.'&h='.$h;
+                    $curl->setopt(CURLOPT_URL, $url);
+                    $json = '{"building":"main","level":5,"wnd_main":{"typeinforefid":0,"type":10},"wnd_index":1,"town_id":"'.$town_id.'","nlreq_id":224625}';    
+                    
+                    	
+                    $curl->setopt(CURLOPT_POSTFIELDS, 'json='.$json);
+                    
+                    my $response_body = '';
+                    open(my $fileb, ">", \$response_body);
+                    $curl->setopt(CURLOPT_WRITEDATA,$fileb);
+                    
+                    $retcode = $curl->perform;
+                    
+                    my $response_code = $curl->getinfo(CURLINFO_HTTP_CODE);
+                    print "Build ".$to_build." retcode $response_code; TownId $town_id\n";
+                }
+            } else {
+                print "An error happened: $retcode ".$curl->strerror($retcode)." ".$curl->errbuf."\n";
+            }
         }
     }
     
@@ -169,4 +235,4 @@ sub getHarvest(\%){
     }
 }
 
-getHarvest(%towns);
+Process(%towns);
