@@ -24,6 +24,11 @@ foreach my $town ($cfg->Parameters('towns')){
 }
 
 sub perform_request{
+
+    use Time::HiRes qw(usleep nanosleep);
+    
+    usleep(2000+int(rand(1000)));
+
     my @cookies = (
         '__utma=1.186868278.1328023865.1328092768.1328172347.3',
         '__utmz=1.1328092768.2.2.utmcsr=ru.grepolis.com|utmccn=(referral)|utmcmd=referral|utmcct=/start',
@@ -107,6 +112,7 @@ sub Process(\%){
             $page = 'building_main';
             $action = 'index';
             $json = '{"town_id":"'.$town_id.'","nlreq_id":917182}';
+	    print "Build request ".$town_id."\n";
             my $response_body = perform_request($page, $action, $town_id, $json, 0);
             
             $response_body =~ m/({.*})/;
@@ -116,31 +122,34 @@ sub Process(\%){
             
             if(defined $hash{'Senate'} && $hash{'Senate'}<25){
                 $to_build = 'main';
-            }elsif(defined $hash{'Farm'}){
-                $to_build = 'farm';
-            }elsif(defined $hash{'Warehouse'}){
-                $to_build = 'storage';
             }elsif(defined $hash{'Academy'}){
                 $to_build = 'academy';
+            }elsif(defined $hash{'Farm'}){
+                $to_build = 'farm';
             }elsif(defined $hash{'Barracks'}){
                 $to_build = 'barracks';
+            }elsif(defined $hash{'Warehouse'}){
+                $to_build = 'storage';
             }elsif(defined $hash{'Harbor'}){
                 $to_build = 'docks';
+<<<<<<< HEAD
             }elsif(defined $hash{'Timber camp'}){
                 $to_build = 'lumber';
             }elsif(defined $hash{'Quarry'}){
                 $to_build = 'stoner';
+=======
+            }elsif(defined $hash{'Quarry'}){
+                $to_build = 'stoner';
+            }elsif(defined $hash{'Timber camp'}){
+                $to_build = 'lumber';
+>>>>>>> d504c4ccf59f342318c7702e9bdcb48bd4197508
             }elsif(defined $hash{'Silver mine'}){
                 $to_build = 'ironer';
             }
-            
             if($to_build ne ''){
                 $action = 'build';
                 $json = '{"building":"'.$to_build.'","level":5,"wnd_main":{"typeinforefid":0,"type":10},"wnd_index":1,"town_id":"'.$town_id.'","nlreq_id":224625}';
                 my $response_body = perform_request($page, $action, $town_id, $json, 1);
-                
-                print $response_body."\n";
-                
                 print "Build ".$to_build." ; TownId $town_id\n";
             }
         }
@@ -151,6 +160,7 @@ sub Process(\%){
             $page = 'data';
             $action = 'get';
             $json = '{"types":[{"type":"map","param":{"x":0,"y":0}},{"type":"bar"}]}';
+	    print "Resources overflow request ".$town_id."\n";
             my $response_body = perform_request($page, $action, $town_id, $json, 0);
             my ($wood, $stone, $iron, $storage) = ($response_body =~ /"resources":{"wood":(\d+),"stone":(\d+),"iron":(\d+)},"storage":(\d+)/g);
             
@@ -177,12 +187,14 @@ sub Process(\%){
             if($donate_for_villages && ($iron_donate > 0 || $stone_donate > 0 || $wood_donate > 0)){
                 $action = 'info';
                 $json = '{"id":"'.$target_id.'","town_id":"'.$town_id.'","nlreq_id":0}';
+		print "Village level request. Town ID ".$town_id." Village ID ".$target_id."\n";
                 my $response_body = perform_request($page, $action, $town_id, $json, 0);
                 my ($now, $next) = ($response_body =~ /<div\sclass=\\\"farm_build_bar_amount\\\">(\d+)\\\/(\d+)<\\\/div>/g);
             
                 if($now < 150000){
                     $action = 'send_resources';
                     $json = '{"target_id":'.$target_id.',"wood":'.$wood_donate.',"stone":'.$stone_donate.',"iron":'.$iron_donate.',"town_id":"'.$town_id.'","nlreq_id":251650}';
+		    print "Village send request. Town ID ".$town_id." Village ID ".$target_id."\n";
                     my $response_body = perform_request($page, $action, $town_id, $json, 1);
                 }
             }
