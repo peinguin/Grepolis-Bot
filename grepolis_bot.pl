@@ -126,6 +126,10 @@ sub Process(\%){
                 $to_build = 'barracks';
             }elsif(defined $hash{'Harbor'}){
                 $to_build = 'docks';
+            }elsif(defined $hash{'Timber camp'}){
+                $to_build = 'lumber';
+            }elsif(defined $hash{'Quarry'}){
+                $to_build = 'stoner';
             }elsif(defined $hash{'Silver mine'}){
                 $to_build = 'ironer';
             }
