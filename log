@@ -1,21 +1,9 @@
 
-Died at ./grepolis_bot.pl line 84.
-Build request 8440
-Resources overflow request 8440
+9
 Farm get harvest. TownId 8440 farmId 3427 
-An error happened: 52 Server returned nothing (no headers, no data) Empty reply from server
-Build request 8440
-Resources overflow request 8440
-Farm get harvest. TownId 8440 farmId 3427 
+9
 Farm get harvest. TownId 8440 farmId 3430 
+11
 Farm get harvest. TownId 8440 farmId 3425 
+10
 Farm get harvest. TownId 8440 farmId 3428 
-Died at ./grepolis_bot.pl line 84.
-Build request 8440
-Resources overflow request 8440
-Farm get harvest. TownId 8440 farmId 3427 
-An error happened: 52 Server returned nothing (no headers, no data) Empty reply from server
-Died at ./grepolis_bot.pl line 84.
-Build request 8440
-Resources overflow request 8440
-An error happened: 52 Server returned nothing (no headers, no data) Empty reply from server

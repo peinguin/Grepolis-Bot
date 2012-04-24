@@ -23,11 +23,14 @@ foreach my $town ($cfg->Parameters('towns')){
     $towns{$town} = \@villagies;
 }
 
+my $sleep_base = $cfg->val( 'options', 'sleep_base' );
+my $sleep_offset = $cfg->val( 'options', 'sleep_offset' );
+
 sub perform_request{
 
-    use Time::HiRes qw(usleep nanosleep);
-    
-    usleep(2000+int(rand(1000)));
+my $time = $sleep_base+int(rand($sleep_offset));
+print $time ."\n";
+    sleep($time);
 
     my @cookies = (
         '__utma=1.186868278.1328023865.1328092768.1328172347.3',
@@ -132,17 +135,10 @@ sub Process(\%){
                 $to_build = 'storage';
             }elsif(defined $hash{'Harbor'}){
                 $to_build = 'docks';
-<<<<<<< HEAD
-            }elsif(defined $hash{'Timber camp'}){
-                $to_build = 'lumber';
-            }elsif(defined $hash{'Quarry'}){
-                $to_build = 'stoner';
-=======
             }elsif(defined $hash{'Quarry'}){
                 $to_build = 'stoner';
             }elsif(defined $hash{'Timber camp'}){
                 $to_build = 'lumber';
->>>>>>> d504c4ccf59f342318c7702e9bdcb48bd4197508
             }elsif(defined $hash{'Silver mine'}){
                 $to_build = 'ironer';
             }
