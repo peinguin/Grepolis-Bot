@@ -69,9 +69,6 @@ my $time = $sleep_base+int(rand($sleep_offset));
     if($post){
         $curl->setopt(CURLOPT_POST, 1);
         $curl->setopt(CURLOPT_POSTFIELDS, 'json='.$json);
-
-        print $url."\n";
-        print $json."\n";
     }else{
         $url .= '&json='.uri_encode($json);
     }
