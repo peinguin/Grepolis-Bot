@@ -29,6 +29,7 @@ my $sleep_offset = $cfg->val( 'options', 'sleep_offset' );
 sub perform_request{
 
 my $time = $sleep_base+int(rand($sleep_offset));
+print $time ."\n";
     sleep($time);
 
     my @cookies = (
@@ -69,9 +70,6 @@ my $time = $sleep_base+int(rand($sleep_offset));
     if($post){
         $curl->setopt(CURLOPT_POST, 1);
         $curl->setopt(CURLOPT_POSTFIELDS, 'json='.$json);
-
-        print $url."\n";
-        print $json."\n";
     }else{
         $url .= '&json='.uri_encode($json);
     }
@@ -117,38 +115,38 @@ sub Process(\%){
             $page = 'building_main';
             $action = 'index';
             $json = '{"town_id":"'.$town_id.'","nlreq_id":917182}';
-	        print "Build request ".$town_id."\n";
+	    print "Build request ".$town_id."\n";
             my $response_body = perform_request($page, $action, $town_id, $json, 0);
   
             $response_body =~ m/({.*})/;
-
-            my %hash = ( JSON->new->allow_nonref->decode( unescape($1) )->{'html'} =~ /BuildingMain.buildBuilding\('([^']+)',\s(\d+)\)/g );
+            my %hash = ( JSON->new->allow_nonref->decode( unescape($1) )->{'html'} =~ /<div\sclass="name\ssmall\sbold"><a\sonclick="Layout.buildingWindow.open\('[\w\s]+'\);"\shref="#">([\w\s]+)<\/a><\/div>[\t\s\n\r]+<a\shref="#"\sonclick="BuildingMain.buildBuilding\('\w+',\s(\d+)\);/g );
+            
             my $to_build = '';
             
-            if(defined $hash{'main'} && $hash{'main'}<25){
+            if(defined $hash{'Senate'} && $hash{'Senate'}<25){
                 $to_build = 'main';
-            }elsif(defined $hash{'academy'}){
+            }elsif(defined $hash{'Academy'}){
                 $to_build = 'academy';
-            }elsif(defined $hash{'farm'}){
+            }elsif(defined $hash{'Farm'}){
                 $to_build = 'farm';
-            }elsif(defined $hash{'barracks'}){
+            }elsif(defined $hash{'Barracks'}){
                 $to_build = 'barracks';
-            }elsif(defined $hash{'storage'}){
+            }elsif(defined $hash{'Warehouse'}){
                 $to_build = 'storage';
-            }elsif(defined $hash{'docks'}){
+            }elsif(defined $hash{'Harbor'}){
                 $to_build = 'docks';
-            }elsif(defined $hash{'stoner'}){
+            }elsif(defined $hash{'Quarry'}){
                 $to_build = 'stoner';
-            }elsif(defined $hash{'lumber'}){
+            }elsif(defined $hash{'Timber camp'}){
                 $to_build = 'lumber';
-            }elsif(defined $hash{'ironer'}){
+            }elsif(defined $hash{'Silver mine'}){
                 $to_build = 'ironer';
             }
             if($to_build ne ''){
                 $action = 'build';
-                $json = '{"building":"'.$to_build.'","level":5,"wnd_main":{"typeinforefid":0,"type":9},"wnd_index":1,"town_id":"'.$town_id.'","nlreq_id":'.int(rand(50000)).'}';
+                $json = '{"building":"'.$to_build.'","level":5,"wnd_main":{"typeinforefid":0,"type":10},"wnd_index":1,"town_id":"'.$town_id.'","nlreq_id":224625}';
                 my $response_body = perform_request($page, $action, $town_id, $json, 1);
-                print "Build ".$to_build." ; TownId $town_id;\n";
+                print "Build ".$to_build." ; TownId $town_id;|".$response_body."|\n";
             }
         }
         

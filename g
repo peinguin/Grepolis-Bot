@@ -1,3 +1,3 @@
 #!/bin/sh
-cd /home/projects/grepolis_bot
+cd /home/projects/Grepolis-Bot
 ./grepolis_bot.pl >>log 2>>log

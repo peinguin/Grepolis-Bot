@@ -6,7 +6,7 @@ server = ru18
 
 [options]
 harvest_chiken = 0
-build = 1
+build = 0
 harvest_farms = 1
 donate_for_villages = 1
 donate = 100
