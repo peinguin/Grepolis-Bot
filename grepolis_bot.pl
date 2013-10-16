@@ -10,6 +10,8 @@ use Unicode::Escape qw(escape unescape);
 use URI::Encode qw(uri_encode uri_decode);
 use JSON;
 
+use utf8;
+
 my $cfg = Config::IniFiles->new( -file => "config.ini" );
 
 my $sid = $cfg->val( 'security', 'sid' );
@@ -28,7 +30,7 @@ my $sleep_offset = $cfg->val( 'options', 'sleep_offset' );
 
 sub perform_request{
 
-my $time = $sleep_base+int(rand($sleep_offset));
+    my $time = $sleep_base+int(rand($sleep_offset));
     sleep($time);
 
     my @cookies = (
@@ -65,7 +67,7 @@ my $time = $sleep_base+int(rand($sleep_offset));
     my ($page, $action, $town_id, $json, $post) = @_;
     
     my $url = 'http://'.$server.'.grepolis.com/game/'.$page.'?action='.$action.'&town_id='.$town_id.'&h='.$h;
-    
+
     if($post){
         $curl->setopt(CURLOPT_POST, 1);
         $curl->setopt(CURLOPT_POSTFIELDS, 'json='.$json);
@@ -119,7 +121,7 @@ sub Process(\%){
   
             $response_body =~ m/({.*})/;
 
-            my %hash = ( JSON->new->allow_nonref->decode( unescape($1) )->{'html'} =~ /BuildingMain.buildBuilding\('([^']+)',\s(\d+)\)/g );
+            my %hash = ( JSON->new->allow_nonref->decode( unescape($1) )->{'json'}->{'html'} =~ /BuildingMain.buildBuilding\('([^']+)',\s(\d+)\)/g );
             my $to_build = '';
             
             if(defined $hash{'main'} && $hash{'main'}<25){
@@ -154,9 +156,10 @@ sub Process(\%){
         if($donate_for_villages){
             $page = 'data';
             $action = 'get';
-            $json = '{"types":[{"type":"map","param":{"x":0,"y":0}},{"type":"bar"}]}';
-	    print "Resources overflow request ".$town_id."\n";
-            my $response_body = perform_request($page, $action, $town_id, $json, 0);
+            $json = '{"types":[{"type":"map","param":{"x":15,"y":4}},{"type":"bar"},{"type":"backbone"}],"town_id":'.$town_id.',"nlreq_id":0}';
+            print "Resources overflow request ".$town_id."\n";
+            my $response_body = perform_request($page, $action, $town_id, $json, 1);
+
             my ($wood, $stone, $iron, $storage) = ($response_body =~ /"resources":{"wood":(\d+),"stone":(\d+),"iron":(\d+)},"storage":(\d+)/g);
             
             my $delta = 10;
@@ -182,14 +185,14 @@ sub Process(\%){
             if($donate_for_villages && ($iron_donate > 0 || $stone_donate > 0 || $wood_donate > 0)){
                 $action = 'info';
                 $json = '{"id":"'.$target_id.'","town_id":"'.$town_id.'","nlreq_id":0}';
-		print "Village level request. Town ID ".$town_id." Village ID ".$target_id."\n";
+                print "Village level request. Town ID ".$town_id." Village ID ".$target_id."\n";
                 my $response_body = perform_request($page, $action, $town_id, $json, 0);
                 my ($now, $next) = ($response_body =~ /<div\sclass=\\\"farm_build_bar_amount\\\">(\d+)\\\/(\d+)<\\\/div>/g);
             
                 if($now < 150000){
                     $action = 'send_resources';
                     $json = '{"target_id":'.$target_id.',"wood":'.$wood_donate.',"stone":'.$stone_donate.',"iron":'.$iron_donate.',"town_id":"'.$town_id.'","nlreq_id":251650}';
-		    print "Village send request. Town ID ".$town_id." Village ID ".$target_id."\n";
+                    print "Village send request. Town ID ".$town_id." Village ID ".$target_id."\n";
                     my $response_body = perform_request($page, $action, $town_id, $json, 1);
                 }
             }
