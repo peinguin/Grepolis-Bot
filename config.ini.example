@@ -1,8 +1,14 @@
 ;security for connection
 [security]
+<<<<<<< HEAD:config.ini
+h = 21fbe8de36d
+sid = cqahxm9fyxc80gog0cgsk84o8
+server = en57
+=======
 h = b7cc76bf6e0
 sid = u18ptv384j4swcg40o04wss0
 server = ru18
+>>>>>>> c3e3294c44a99e0394287c6bbe1dca2f57abbca7:config.ini.example
 
 [options]
 harvest_chiken = 0
@@ -10,8 +16,12 @@ build = 1
 harvest_farms = 1
 donate_for_villages = 1
 donate = 100
-sleep_base = 1
+sleep_base = 10
 sleep_offset = 5
 
 [towns]
+<<<<<<< HEAD:config.ini
+4366 = 1358, 1353, 1356, 1355, 1354
+=======
 943 = 304, 303, 302, 300, 299, 301, 298, 297
+>>>>>>> c3e3294c44a99e0394287c6bbe1dca2f57abbca7:config.ini.example
