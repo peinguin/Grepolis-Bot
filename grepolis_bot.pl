@@ -9,6 +9,7 @@ use Data::Dumper;
 use Unicode::Escape qw(escape unescape);
 use URI::Encode qw(uri_encode uri_decode);
 use JSON;
+use Email::MIME;
 
 use utf8;
 
@@ -27,6 +28,8 @@ foreach my $town ($cfg->Parameters('towns')){
 
 my $sleep_base = $cfg->val( 'options', 'sleep_base' );
 my $sleep_offset = $cfg->val( 'options', 'sleep_offset' );
+
+my $STOPFILE = 'stop';
 
 sub perform_request{
 
@@ -97,7 +100,52 @@ my $harvest_farms = $cfg->val( 'options', 'harvest_farms' );
 my $donate_for_villages = $cfg->val( 'options', 'donate_for_villages' );
 my $donate = $cfg->val( 'options', 'donate' );
 
+sub check_captcha{
+
+    print "Captcha cheking \n";
+
+    my $town_id = (keys %towns)[0];
+
+    my $page = 'debug';
+    my $action = 'log_startup_time';
+    my $json = '{"t":2451,"town_id":'.$town_id.',"nlreq_id":1644995}';
+
+    my $response_body = perform_request($page, $action, $town_id, $json, 1);
+
+    if($response_body =~ /"type":"botcheck"/){
+
+        open FILE, ">", $STOPFILE or die $!;
+        close(FILE);
+
+        my $message = Email::MIME->create(
+          header_str => [
+            From    => 'bot@php.poltava.ua',
+            To      => 'pingvein@gmail.com',
+            Subject => 'Captha needed!',
+          ],
+          attributes => {
+            encoding => 'quoted-printable',
+            charset  => 'ISO-8859-1',
+          },
+          body_str => "Grepolis Captha needed!\n",
+        );
+
+        # send the message
+        use Email::Sender::Simple qw(sendmail);
+        sendmail($message);
+
+        exit;
+    }
+}
+
 sub Process(\%){
+
+    
+    if (-e $STOPFILE) {
+        exit;
+    }
+
+    check_captcha();
     
     my $url = '';
     my $page = '';
