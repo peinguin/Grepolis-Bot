@@ -2,103 +2,17 @@
 
 use strict;
 use warnings;
-use WWW::Curl::Easy;
-use URI::Escape;
+
 use Config::IniFiles;
-use Data::Dumper;
-use Unicode::Escape qw(escape unescape);
-use URI::Encode qw(uri_encode uri_decode);
 use JSON;
 use Email::MIME;
 
+use Data::Dumper;
+
+use GrepolisBotModules::Request;
+use GrepolisBotModules::Town;
+
 use utf8;
-
-my $cfg = Config::IniFiles->new( -file => "config.ini" );
-
-my $sid = $cfg->val( 'security', 'sid' );
-my $h = $cfg->val( 'security', 'h' );
-my $server = $cfg->val( 'security', 'server' );
-
-my %towns = ();
-
-foreach my $town ($cfg->Parameters('towns')){
-    my @villagies = split(', ',$cfg->val( 'towns', $town ));
-    $towns{$town} = \@villagies;
-}
-
-my $sleep_base = $cfg->val( 'options', 'sleep_base' );
-my $sleep_offset = $cfg->val( 'options', 'sleep_offset' );
-
-my $STOPFILE = 'stop';
-
-sub perform_request{
-
-    my $time = $sleep_base+int(rand($sleep_offset));
-    sleep($time);
-
-    my @cookies = (
-        '__utma=1.186868278.1328023865.1328092768.1328172347.3',
-        '__utmz=1.1328092768.2.2.utmcsr=ru.grepolis.com|utmccn=(referral)|utmcmd=referral|utmcct=/start',
-        'cid=1514937687',
-        'PHPSESSID=66heoqi60jquur1005c5pm6uu0',
-        'sid='.$sid,
-        'logged_in=true',
-        '__utmc=1',
-        '__utmb=1.25.9.1328172446000',
-        'fbm_227823082573=base_domain=.grepolis.com',
-        'fbsr_227823082573=Y896psH56np92p6Kf_HuRhYdS16R8FiuA4jRRYI8eqU.eyJhbGdvcml0aG0iOiJITUFDLVNIQTI1NiIsImNvZGUiOiIyLkFRRHJKM2l2N0wxWHgzMnQuMzYwMC4xMzI4MTc2ODAwLjEtNjc1MDYzODc1fDZ3SE8yTnZRdVh2d1hBUFBsSGZNMnF5eENqWSIsImlzc3VlZF9hdCI6MTMyODE3MjM2NywidXNlcl9pZCI6IjY3NTA2Mzg3NSJ9',
-    );
-    
-    my @headers = ('Accept:	text/plain, */*; q=0.01');
-    push(@headers, 'Accept-Charset:	ISO-8859-1,utf-8;q=0.7,*;q=0.7');
-    push(@headers, 'Accept-Encoding:');
-    push(@headers, 'Accept-Language: en-us,en;q=0.5');
-    push(@headers, 'Cache-Control: no-cache');
-    push(@headers, 'Connection:	keep-alive');
-    push(@headers, 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8');
-    push(@headers, 'Cookie: '.join('; ', @cookies));
-    push(@headers, 'Host: ru8.grepolis.com');
-    push(@headers, 'Pragma:	no-cache');
-    push(@headers, 'Referer: http://ru8.grepolis.com/game/index?login=1');
-    push(@headers, 'User-Agent:	Mozilla/5.0 (X11; Linux x86_64; rv:9.0.1) Gecko/20100101 Firefox/9.0.1 Iceweasel/9.0.1');
-    push(@headers, 'X-Requested-With: XMLHttpRequest');
-    
-    my $curl = WWW::Curl::Easy->new;
-    $curl->setopt(CURLOPT_HEADER,0);
-    $curl->setopt(CURLOPT_HTTPHEADER, \@headers);
-    
-    my ($page, $action, $town_id, $json, $post) = @_;
-    
-    my $url = 'http://'.$server.'.grepolis.com/game/'.$page.'?action='.$action.'&town_id='.$town_id.'&h='.$h;
-
-    if($post){
-        $curl->setopt(CURLOPT_POST, 1);
-        $curl->setopt(CURLOPT_POSTFIELDS, 'json='.$json);
-    }else{
-        $url .= '&json='.uri_encode($json);
-    }
-    
-    $curl->setopt(CURLOPT_URL, $url);
-    
-    my $response_body = '';
-    open(my $fileb, ">", \$response_body);
-    $curl->setopt(CURLOPT_WRITEDATA,$fileb);
-    
-    my $retcode = $curl->perform;
-    
-    if ($retcode != 0) {
-        print "An error happened: $retcode ".$curl->strerror($retcode)." ".$curl->errbuf."\n";
-        die;
-    }else{
-        return $response_body;
-    }
-}
-
-my $harvest_chiken = $cfg->val( 'options', 'harvest_chiken' );
-my $build = $cfg->val( 'options', 'build' );
-my $harvest_farms = $cfg->val( 'options', 'harvest_farms' );
-my $donate_for_villages = $cfg->val( 'options', 'donate_for_villages' );
-my $donate = $cfg->val( 'options', 'donate' );
 
 sub check_captcha{
 
@@ -110,7 +24,7 @@ sub check_captcha{
     my $action = 'log_startup_time';
     my $json = '{"t":2451,"town_id":'.$town_id.',"nlreq_id":1644995}';
 
-    my $response_body = perform_request($page, $action, $town_id, $json, 1);
+    my $response_body = GrepolisBot::Request::request($page, $action, $town_id, $json, 1);
 
     if($response_body =~ /"type":"botcheck"/){
 
@@ -140,7 +54,6 @@ sub check_captcha{
 
 sub Process(\%){
 
-    
     if (-e $STOPFILE) {
         exit;
     }
@@ -165,7 +78,7 @@ sub Process(\%){
             $action = 'index';
             $json = '{"town_id":"'.$town_id.'","nlreq_id":917182}';
 	        print "Build request ".$town_id."\n";
-            my $response_body = perform_request($page, $action, $town_id, $json, 0);
+            my $response_body = GrepolisBot::Request::request($page, $action, $town_id, $json, 0);
   
             $response_body =~ m/({.*})/;
 
@@ -194,7 +107,7 @@ sub Process(\%){
             if($to_build ne ''){
                 $action = 'build';
                 $json = '{"building":"'.$to_build.'","level":5,"wnd_main":{"typeinforefid":0,"type":9},"wnd_index":1,"town_id":"'.$town_id.'","nlreq_id":'.int(rand(50000)).'}';
-                my $response_body = perform_request($page, $action, $town_id, $json, 1);
+                my $response_body = GrepolisBot::Request::request($page, $action, $town_id, $json, 1);
                 print "Build ".$to_build." ; TownId $town_id;\n";
             }
         }
@@ -206,7 +119,7 @@ sub Process(\%){
             $action = 'get';
             $json = '{"types":[{"type":"map","param":{"x":15,"y":4}},{"type":"bar"},{"type":"backbone"}],"town_id":'.$town_id.',"nlreq_id":0}';
             print "Resources overflow request ".$town_id."\n";
-            my $response_body = perform_request($page, $action, $town_id, $json, 1);
+            my $response_body = GrepolisBotModules::Request::request($page, $action, $town_id, $json, 1);
 
             my ($wood, $stone, $iron, $storage) = ($response_body =~ /"resources":{"wood":(\d+),"stone":(\d+),"iron":(\d+)},"storage":(\d+)/g);
             
@@ -234,73 +147,33 @@ sub Process(\%){
                 $action = 'info';
                 $json = '{"id":"'.$target_id.'","town_id":"'.$town_id.'","nlreq_id":0}';
                 print "Village level request. Town ID ".$town_id." Village ID ".$target_id."\n";
-                my $response_body = perform_request($page, $action, $town_id, $json, 0);
+                my $response_body = GrepolisBotModules::Request::request($page, $action, $town_id, $json, 0);
                 my ($now, $next) = ($response_body =~ /<div\sclass=\\\"farm_build_bar_amount\\\">(\d+)\\\/(\d+)<\\\/div>/g);
             
                 if($now < 150000){
                     $action = 'send_resources';
                     $json = '{"target_id":'.$target_id.',"wood":'.$wood_donate.',"stone":'.$stone_donate.',"iron":'.$iron_donate.',"town_id":"'.$town_id.'","nlreq_id":251650}';
                     print "Village send request. Town ID ".$town_id." Village ID ".$target_id."\n";
-                    my $response_body = perform_request($page, $action, $town_id, $json, 1);
+                    my $response_body = GrepolisBotModules::Request::request($page, $action, $town_id, $json, 1);
                 }
             }
             
             if($harvest_farms){
                 my $action = 'claim_load';
                 $json = '{"target_id":"'.$target_id.'","claim_type":"normal","time":300,"town_id":"'.$town_id.'","nlreq_id":917182}';
-                my $response_body = perform_request($page, $action, $town_id, $json, 1);
+                my $response_body = GrepolisBotModules::Request::request($page, $action, $town_id, $json, 1);
                 print "Farm get harvest. TownId $town_id farmId $target_id \n";
-                
-                #print "=======================================\n";
-                #print "Datetime ".join(' ', localtime(time))."\n";
-                #print "Harvest from $target_id to $town_id \n";
-                #    print "Output \n".unescape($response_body)."\n";
-                #print "\n=======================================\n";
             }
         }
-    }
-    
-    if($harvest_chiken){
-        
-        my @towns = keys %{$_[0]};
-        
-        $town_id = @towns[int(rand($#towns))];
-        
-        $page = 'easter';
-        $action = 'index';
-        $json = '{"town_id":"'.$town_id.'","nlreq_id":917182}';
-        
-        my $response_body = perform_request($page, $action, $town_id, $json, 0);
-        
-        print "Chicken. TownId $town_id \n";
-
-        $response_body =~ m/({.*})/;
-        $json = JSON->new->allow_nonref;
-        my $resp = $json->decode( unescape($1) );
-        
-        if(defined $resp->{'data'}->{'food_search_ends_at'}){
-            if( defined$resp->{'data'}->{'food_found'}){
-                my $grass = $resp->{'data'}->{'food_found'}->{'grass'};
-                my $worms = $resp->{'data'}->{'food_found'}->{'grass'};
-                my $corn = $resp->{'data'}->{'food_found'}->{'grass'};
-                
-                $action = 'collect';
-                $json = '{"town_id":"'.$town_id.'","nlreq_id":917182}';
-                my $response_body = perform_request($page, $action, $town_id, $json, 0);
-                
-                print "Chicken collect; TownId $town_id \n";
-                if($grass == 0 && $worms == 0 && $corn == 0){
-                    print "Nothing found \n";
-                }
-            }
-        }
-        
-        $action = 'start_search';
-        $json = '{"duration":300, "town_id":"'.$town_id.'","nlreq_id":917182}';
-        $response_body = perform_request($page, $action, $town_id, $json, 0);
-        
-        print "Chicken search; TownId $town_id \n";
     }
 }
 
-Process(%towns);
+my $Towns = [];
+
+sub StartGame{
+    my $game = GrepolisBotModules::Request::base_request('http://en68.grepolis.com/game');
+    $game =~ /"townId":(\d+),/;
+    push($Towns, new GrepolisBotModules::Town($1));
+}
+
+StartGame();
