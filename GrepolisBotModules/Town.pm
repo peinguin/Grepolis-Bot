@@ -6,10 +6,11 @@ use warnings;
 use GrepolisBotModules::Request;
 use GrepolisBotModules::Farm;
 
+use AnyEvent;
 use JSON;
 use Data::Dumper;
 
-sub get_town_data {
+my $get_town_data = sub {
     my( $self ) = @_;
     my $resp = JSON->new->allow_nonref->decode(
         GrepolisBotModules::Request::request(
@@ -26,7 +27,8 @@ sub get_town_data {
                 defined $data->{'towns'}->{$key}->{'relation_status'} &&
                 $data->{'towns'}->{$key}->{'relation_status'} == 1
             ){
-               push($self->{'villages'}, new GrepolisBotModules::Farm($data->{'towns'}->{$key}->{'id'}));
+                my $village = new GrepolisBotModules::Farm($data->{'towns'}->{$key}->{'id'}, $self);
+                push($self->{'villages'}, $village);
             }
         }
     }
@@ -54,6 +56,19 @@ sub get_town_data {
         );
 
     $self->{'max_storage'} = $resp->{'json'}->{'max_storage'};
+};
+
+my $build_something;
+
+$build_something = sub {
+    my $self = shift;
+    print "build_something\n";
+    GrepolisBotModules::Async::delay( 1, sub {$self->$build_something} );
+};
+
+sub getId{
+    my $self = shift;
+    return $self->{'id'};
 }
 
 sub new {
@@ -69,9 +84,8 @@ sub new {
 
     bless $self, $class;
     
-    $self->get_town_data();
-
-    print Dumper($self);
+    $self->$get_town_data;
+    $self->$build_something;
 
     return $self;
 }

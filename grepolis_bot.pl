@@ -3,22 +3,19 @@
 use strict;
 use warnings;
 
-use Config::IniFiles;
 use JSON;
 use Email::MIME;
-
 use Data::Dumper;
 
 use GrepolisBotModules::Request;
 use GrepolisBotModules::Town;
+use GrepolisBotModules::Async;
 
 use utf8;
-
+=cut
 sub check_captcha{
 
     print "Captcha cheking \n";
-
-    my $town_id = (keys %towns)[0];
 
     my $page = 'debug';
     my $action = 'log_startup_time';
@@ -58,7 +55,7 @@ sub Process(\%){
         exit;
     }
 
-    check_captcha();
+    check_captcha;
     
     my $url = '';
     my $page = '';
@@ -154,26 +151,18 @@ sub Process(\%){
                     $action = 'send_resources';
                     $json = '{"target_id":'.$target_id.',"wood":'.$wood_donate.',"stone":'.$stone_donate.',"iron":'.$iron_donate.',"town_id":"'.$town_id.'","nlreq_id":251650}';
                     print "Village send request. Town ID ".$town_id." Village ID ".$target_id."\n";
-                    my $response_body = GrepolisBotModules::Request::request($page, $action, $town_id, $json, 1);
+                    my $response_body = GrepolisBotModules::Request::request('farm_town_info', $action, $town_id, $json, 1);
                 }
-            }
-            
-            if($harvest_farms){
-                my $action = 'claim_load';
-                $json = '{"target_id":"'.$target_id.'","claim_type":"normal","time":300,"town_id":"'.$town_id.'","nlreq_id":917182}';
-                my $response_body = GrepolisBotModules::Request::request($page, $action, $town_id, $json, 1);
-                print "Farm get harvest. TownId $town_id farmId $target_id \n";
             }
         }
     }
 }
+=cut
 
 my $Towns = [];
 
-sub StartGame{
+GrepolisBotModules::Async::run sub{
     my $game = GrepolisBotModules::Request::base_request('http://en68.grepolis.com/game');
     $game =~ /"townId":(\d+),/;
     push($Towns, new GrepolisBotModules::Town($1));
-}
-
-StartGame();
+};

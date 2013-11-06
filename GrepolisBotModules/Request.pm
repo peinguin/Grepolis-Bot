@@ -3,9 +3,9 @@ package GrepolisBotModules::Request;
 use strict;
 use warnings;
 
+use Config::IniFiles;
 use WWW::Curl::Easy;
 use URI::Encode qw(uri_encode uri_decode);
-
 use JSON;
 use Data::Dumper;
  
@@ -44,7 +44,7 @@ sub request {
 }
 
 sub base_request {
-
+print "http request start\n";
     my ($url, $body, $post) = @_;
 
     my $curl = WWW::Curl::Easy->new;
@@ -56,7 +56,12 @@ sub base_request {
         $curl->setopt(CURLOPT_POSTFIELDS, 'json='.$body);
     }else{
         if(defined $body){
-            $url .= '&json='.uri_encode($body);
+            if($url =~ /\?/){
+                $url .= '&';
+            }else{
+                $url .= '?';
+            }
+            $url .= 'json='.uri_encode($body);
         }
     }
 
@@ -88,12 +93,20 @@ sub base_request {
                         $arg->{'type'} ne 'building_finished' &&
                         $arg->{'type'} ne 'newreport'
                     ){
-                        print Dumper($arg);
+                        if(
+                            $arg->{'type'} eq 'backbone' &&
+                            $arg->{'subject'} eq 'Town'
+                        ){
+                            #TODO: update town info
+                            print Dumper(JSON->new->allow_nonref->decode($arg->{'param_str'}));
+                        }else{
+                            print Dumper($arg);
+                        }
                     }
                 }
             }
         }
-
+print "http request end\n";
         return $response_body;
     }
 }
