@@ -83,7 +83,8 @@ sub base_request {
                                         $arg->{'subject'} ne 'PlayerRanking' &&
                                         $arg->{'subject'} ne 'Buildings' &&
                                         $arg->{'subject'} ne 'IslandQuest' &&
-                                        $arg->{'subject'} ne 'TutorialQuest'
+                                        $arg->{'subject'} ne 'TutorialQuest' &&
+                                        $arg->{'subject'} ne 'Units'
                                     )
                                 )
                             )
