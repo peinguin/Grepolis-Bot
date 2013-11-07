@@ -2,7 +2,7 @@
 Grepolis bot
 ============
 
-./install_libraries.sh for debian/ubuntu users.
+./install_libraries.sh #for debian/ubuntu users.
 
 cp config.ini.example config.ini
 
