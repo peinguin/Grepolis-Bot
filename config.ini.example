@@ -3,3 +3,5 @@
 sid = cqahxm9fyxc80gog0cgsk84o8
 server = en57
 h = fdfddffd
+[global]
+log = 0
