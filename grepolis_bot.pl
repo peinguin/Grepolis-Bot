@@ -33,7 +33,7 @@ GrepolisBotModules::Async::run sub{
 
     GrepolisBotModules::Log::echo(0, "Program started\n");
 
-    my $game = GrepolisBotModules::Request::base_request('http://en68.grepolis.com/game');
+    my $game = GrepolisBotModules::Request::base_request('http://'.$config->{'security'}->{'server'}.'.grepolis.com/game');
 
     $game =~ /"csrfToken":"([^"]+)",/;
     GrepolisBotModules::Request::setH($1);
