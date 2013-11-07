@@ -37,6 +37,8 @@ my $upgrade = sub{
     $json = '{"target_id":'.$self->{'id'}.',"wood":'.$donate->{'wood'}.',"stone":'.$donate->{'stone'}.',"iron":'.$donate->{'iron'}.',"town_id":"'.$self->{'town'}->getId().'"}';
     my $response_body = GrepolisBotModules::Request::request('farm_town_info', 'send_resources', $self->{'town'}->getId(), $json, 1);
     GrepolisBotModules::Log::echo 1, "Village send request. Town ID ".$self->{'town'}->getId()." Village ID ".$self->{'id'}."\n";
+
+    $self->$get_farm_data;
 };
 my $claim = sub{
 	my $self = shift;
