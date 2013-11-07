@@ -3,7 +3,6 @@
 use strict;
 use warnings;
 
-use Email::MIME;
 use Config::IniFiles;
 
 use GrepolisBotModules::Request;
