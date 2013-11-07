@@ -141,8 +141,8 @@ sub needResources{
     my $resources_by_request = shift;
 
     if(
-        $self->{'iron'} + $resources_by_request < $self->{'max_storage'} &&
-        $self->{'wood'} + $resources_by_request < $self->{'max_storage'} &&
+        $self->{'iron'} + $resources_by_request < $self->{'max_storage'} ||
+        $self->{'wood'} + $resources_by_request < $self->{'max_storage'} ||
         $self->{'stone'} + $resources_by_request < $self->{'max_storage'}
     ){
         return 1;
