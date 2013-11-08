@@ -84,11 +84,26 @@ sub base_request {
                                         $arg->{'subject'} ne 'Buildings' &&
                                         $arg->{'subject'} ne 'IslandQuest' &&
                                         $arg->{'subject'} ne 'TutorialQuest' &&
-                                        $arg->{'subject'} ne 'Units'
+                                        $arg->{'subject'} ne 'Units' &&
+                                        $arg->{'subject'} ne 'UnitOrder' &&
+                                        $arg->{'subject'} ne 'CastedPowers' &&
+                                        $arg->{'subject'} ne 'UnitOrder' &&
+                                        $arg->{'subject'} ne 'CommandsMenuBubble'
+                                    )
+                                )
+                            ) &&
+                            (
+                                $arg->{'type'} ne 'systemmessage' ||
+                                $arg->{'type'} eq 'systemmessage' && 
+                                (
+                                    !(defined $arg->{'subject'}) ||
+                                    (
+                                        $arg->{'subject'} ne 'menububbleTrade'
                                     )
                                 )
                             )
-                        )
+                        ) &&
+                        $arg->{'type'} ne 'incoming_support'
                     ){
                         GrepolisBotModules::Log::dump 5, $arg;
                     }

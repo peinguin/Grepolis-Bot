@@ -37,7 +37,10 @@ GrepolisBotModules::Async::run sub{
 
     $game =~ /"csrfToken":"([^"]+)",/;
     GrepolisBotModules::Request::setH($1);
-    $game =~ /"townId":(\d+),/;
-    GrepolisBotModules::Log::echo 1, "Town $1 added\n";
-    push($Towns, new GrepolisBotModules::Town($1));
+    if($game =~ /"townId":(\d+),/){
+        GrepolisBotModules::Log::echo 1, "Town $1 added\n";
+        push($Towns, new GrepolisBotModules::Town($1));
+    }else{
+        die('Maybe, not logged in.');
+    }
 };
