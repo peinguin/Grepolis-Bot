@@ -70,6 +70,7 @@ sub base_request {
                 foreach my $arg (@{$json->{'notifications'}}) {
                     if(
                         (
+			    $arg->{'type'} ne 'newaward' &&
                             $arg->{'type'} ne 'building_finished' &&
                             $arg->{'type'} ne 'newreport' &&
                             (
