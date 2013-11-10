@@ -24,12 +24,13 @@ my $get_town_data = sub {
 
     $self->{'max_storage'} = $resp->{'json'}->{'max_storage'};
 
+    my $json =  {types => [{type => 'backbone'},{type => "map", param => {x => 0,y => 0}}]};
     $resp = JSON->new->allow_nonref->decode(
         GrepolisBotModules::Request::request(
                 'data',
                 'get',
                 $self->{'id'},
-                '{"types":[{"type":"backbone"},{"type":"map","param":{"x":0,"y":0}}]}',
+                $json,
                 1
             )
         );
@@ -63,7 +64,7 @@ $build_something = sub {
     my $self = shift;
 
     GrepolisBotModules::Log::echo 0, "Build request ".$self->{'id'}."\n";
-    my $response_body = GrepolisBotModules::Request::request('building_main', 'index', $self->{'id'}, '{"town_id":"'.$self->{'id'}.'"}', 0);
+    my $response_body = GrepolisBotModules::Request::request('building_main', 'index', $self->{'id'}, {town_id => $self->{'id'}}, 0);
 
     $response_body =~ m/({.*})/;
 
@@ -94,7 +95,7 @@ $build_something = sub {
             'building_main',
             'build',
             $self->{'id'},
-            '{"building":"'.$to_build.'","level":5,"wnd_main":{"typeinforefid":0,"type":9},"wnd_index":0,"town_id":"'.$self->{'id'}.'"}',
+            {building => $to_build, level => 5, wnd_main => {typeinforefid => 0, type => 9}, wnd_index => 0, town_id => $self->{'id'}},
             1
         );
     }

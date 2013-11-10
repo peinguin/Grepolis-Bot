@@ -14,7 +14,7 @@ my $get_farm_data = sub {
                 'farm_town_info',
                 'claim_info',
                 $self->{'town'}->getId,
-                '{"id":"'.$self->{'id'}.'"}',
+                {id => $self->{'id'}},
                 0
             )
         );
@@ -34,7 +34,7 @@ my $upgrade = sub{
 
 	my $donate = $self->{'town'}->toUpgradeResources();
 
-    $json = '{"target_id":'.$self->{'id'}.',"wood":'.$donate->{'wood'}.',"stone":'.$donate->{'stone'}.',"iron":'.$donate->{'iron'}.',"town_id":"'.$self->{'town'}->getId().'"}';
+    $json = {target_id => $self->{'id'}, wood => $donate->{'wood'}, stone => $donate->{'stone'}, iron => $donate->{'iron'}, town_id => $self->{'town'}->getId()};
     my $response_body = GrepolisBotModules::Request::request('farm_town_info', 'send_resources', $self->{'town'}->getId(), $json, 1);
     GrepolisBotModules::Log::echo 1, "Village send request. Town ID ".$self->{'town'}->getId()." Village ID ".$self->{'id'}."\n";
 
@@ -42,7 +42,7 @@ my $upgrade = sub{
 };
 my $claim = sub{
 	my $self = shift;
-	$json = '{"target_id":"'.$self->{'id'}.'","claim_type":"normal","time":300,"town_id":"'.$self->{'town'}->getId.'"}';
+	$json = {target_id => $self->{'id'}, claim_type => normal, time => 300, town_id => $self->{'town'}->getId};
     my $response_body = GrepolisBotModules::Request::request('farm_town_info', 'claim_load', $self->{'town'}->getId, $json, 1);
 
     my $json = JSON->new->allow_nonref->decode($response_body)->{'json'};
@@ -50,7 +50,8 @@ my $claim = sub{
         foreach my $arg (@{$json->{'notifications'}}) {
             if(
                 $arg->{'type'} eq 'backbone' &&
-                $arg->{'subject'} eq 'Town'
+                $arg->{'subject'} eq 'Town' &&
+                ! defined $arg->{'id'}
             ){
                 my $town = JSON->new->allow_nonref->decode($arg->{'param_str'})->{'Town'};
                 $self->{'town'}->setResources($town->{'last_iron'}, $town->{'last_stone'}, $town->{'last_wood'});

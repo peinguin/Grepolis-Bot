@@ -13,6 +13,8 @@ my @headers = undef;
 my $config  = undef;
 my $h = undef;
 
+my $nlreq_id = undef;
+
 sub request {
     my ($page, $action, $town_id, $json, $post) = @_;
     my $url = 'http://'.$config->{'server'}.'.grepolis.com/game/'.$page.'?action='.$action.'&town_id='.$town_id;
@@ -28,6 +30,12 @@ sub base_request {
     my $curl = WWW::Curl::Easy->new;
     $curl->setopt(CURLOPT_HEADER,0);
     $curl->setopt(CURLOPT_HTTPHEADER, \@headers);
+
+    if(defined $nlreq_id > 0){
+        $body->{'nlreq_id'} = $nlreq_id;
+    }
+
+    $body = JSON->new->allow_nonref->encode($body);
 
     if(defined $post && $post){
         $curl->setopt(CURLOPT_POST, 1);
@@ -70,7 +78,7 @@ sub base_request {
                 foreach my $arg (@{$json->{'notifications'}}) {
                     if(
                         (
-			    $arg->{'type'} ne 'newaward' &&
+                            $arg->{'type'} ne 'newaward' &&
                             $arg->{'type'} ne 'building_finished' &&
                             $arg->{'type'} ne 'newreport' &&
                             (
@@ -99,7 +107,8 @@ sub base_request {
                                 (
                                     !(defined $arg->{'subject'}) ||
                                     (
-                                        $arg->{'subject'} ne 'menububbleTrade'
+                                        $arg->{'subject'} ne 'menububbleTrade' &&
+                                        $arg->{'subject'} ne 'menububbleMovement'
                                     )
                                 )
                             )
@@ -109,6 +118,10 @@ sub base_request {
                         $arg->{'type'} ne 'resourcetransport'
                     ){
                         GrepolisBotModules::Log::dump 5, $arg;
+                    }
+
+                    if(defined $arg->{'id'}){
+                        $nlreq_id = int($arg->{'id'});
                     }
                 }
             }
