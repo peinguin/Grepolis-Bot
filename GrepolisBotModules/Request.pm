@@ -103,7 +103,9 @@ sub base_request {
                                 )
                             )
                         ) &&
-                        $arg->{'type'} ne 'incoming_support'
+                        $arg->{'type'} ne 'incoming_support' &&
+                        $arg->{'type'} ne 'phoenician_salesman_arrived' &&
+                        $arg->{'type'} ne 'resourcetransport'
                     ){
                         GrepolisBotModules::Log::dump 5, $arg;
                     }
