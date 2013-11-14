@@ -108,7 +108,8 @@ sub base_request {
                                     !(defined $arg->{'subject'}) ||
                                     (
                                         $arg->{'subject'} ne 'menububbleTrade' &&
-                                        $arg->{'subject'} ne 'menububbleMovement'
+                                        $arg->{'subject'} ne 'menububbleMovement' &&
+                                        $arg->{'subject'} ne 'doRefetchBar'
                                     )
                                 )
                             )
@@ -117,7 +118,11 @@ sub base_request {
                         $arg->{'type'} ne 'phoenician_salesman_arrived' &&
                         $arg->{'type'} ne 'resourcetransport'
                     ){
-                        GrepolisBotModules::Log::dump 5, $arg;
+                        if($arg->{'type'} eq 'botcheck'){
+                            die('Do bot cheching!');
+                        }else{
+                            GrepolisBotModules::Log::dump 5, $arg;
+                        }
                     }
 
                     if(defined $arg->{'id'}){
