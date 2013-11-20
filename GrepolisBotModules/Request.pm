@@ -97,7 +97,8 @@ sub base_request {
                                         $arg->{'subject'} ne 'UnitOrder' &&
                                         $arg->{'subject'} ne 'CastedPowers' &&
                                         $arg->{'subject'} ne 'UnitOrder' &&
-                                        $arg->{'subject'} ne 'CommandsMenuBubble'
+                                        $arg->{'subject'} ne 'CommandsMenuBubble' &&
+                                        $arg->{'subject'} ne 'Trade'
                                     )
                                 )
                             ) &&
