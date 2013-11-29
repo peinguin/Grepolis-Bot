@@ -110,7 +110,8 @@ sub base_request {
                                     (
                                         $arg->{'subject'} ne 'menububbleTrade' &&
                                         $arg->{'subject'} ne 'menububbleMovement' &&
-                                        $arg->{'subject'} ne 'doRefetchBar'
+                                        $arg->{'subject'} ne 'doRefetchBar' &&
+                                        $arg->{'subject'} ne 'menububbleTroops'
                                     )
                                 )
                             )
